@@ -1,0 +1,67 @@
+<html>
+
+    <head>
+        <style>
+
+            body {
+                background-color: #000;
+            }
+
+            #canvas {
+                background-color: #F6E8EA;
+                border: 1px solid black;
+                margin: 0 auto;
+                display: block;
+                margin: auto;
+            }
+
+        </style>
+
+    </head>
+
+
+
+    <body onload="init()">
+        
+        <canvas id="canvas" width="600" height = "600"></canvas>
+
+
+        <script type="text/javascript">
+
+            
+            var canvas = document.getElementById('canvas');
+            var oL = canvas.offsetLeft;
+            var oR = canvas.offsetRight;
+            var oT = canvas.offsetTop;
+
+            function init () {
+                window.requestAnimationFrame(draw);
+            }
+
+            
+
+            function draw () {
+                var ctx = canvas.getContext('2d');
+                ctx.fillStyle = "#F6E8EA";
+                ctx.fillRect(0, 0, 600, 600);
+
+
+                window.requestAnimationFrame(draw);
+            }
+
+            canvas.addEventListener('click', function(e) {
+
+                var x = e.pageX - canvas.offsetLeft;
+                var y = e.pageY - canvas.offsetTop;
+                console.log("mouse: " + x + " " + y);
+
+                
+            });
+
+        </script>
+
+    </body>
+
+
+
+</html>
