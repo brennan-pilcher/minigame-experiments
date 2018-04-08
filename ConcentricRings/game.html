@@ -35,12 +35,29 @@
             var oT = canvas.offsetTop;
             var ctx = canvas.getContext('2d');
 
+            // var startButton = {
+            //     timer : {
+            //         started : false,
+            //         completed : false,
+            //         startTime : {},
+            //         endTime : {}
+            //     },
+            //     x : 225,
+            //     y : 25,
+            //     width : 150,
+            //     height : 35,
+            //     color : '#576490',
+            //     borderColor : '#493548',
+            //     textColor : '#ffffff',
+            //     text : 'START'
+            // };
+            
             var startButton = {
                 timer : {
                     started : false,
                     completed : false,
                     startTime : {},
-                    endTime : {}
+                    target : 3000
                 },
                 x : 225,
                 y : 25,
@@ -51,9 +68,16 @@
                 textColor : '#ffffff',
                 text : 'START'
             };
+            
+            var statusText = {
+                x : 300,
+                y : 100,
+                textColor : '#000000',
+                text : ''
+            };
 
             function init () {
-                ctx.font = "lighter 18px Verdana";
+                ctx.textAlign = 'center';
                 window.requestAnimationFrame(draw);
             }
 
@@ -78,9 +102,25 @@
                 ctx.strokeRect( startButton.x, startButton.y, startButton.width, startButton.height );
                 ctx.fillRect( startButton.x, startButton.y, startButton.width, startButton.height );
 
-                ctx.textAlign = 'center';
+                ctx.font = "lighter 18px Verdana";
                 ctx.fillStyle = startButton.textColor;
                 ctx.fillText( startButton.text, startButton.x + startButton.width/2, startButton.y + startButton.height/2 + 5 );
+
+                // Status Text
+                ctx.font = "lighter 12px Verdana";
+                ctx.fillStyle = statusText.textColor;
+                if ( !startButton.timer.completed && startButton.timer.started ) {
+                    console.log(3000 - (performance.now() - startButton.timer.startTime));
+                    if ( performance.now() - startButton.timer.startTime >= startButton.timer.target ) {
+                        statusText.text = "Game Started!";
+                        startButton.borderColor = '#80B192';
+                        startButton.timer.completed = true;
+                    } else {
+                        statusText.text = "Starting in... " +  ((3000 - (performance.now() - startButton.timer.startTime)) / 1000).toFixed(1) + "s";
+                    }
+                }
+                ctx.fillText( statusText.text, statusText.x, statusText.y );
+
 
 
                 window.requestAnimationFrame(draw);
@@ -95,18 +135,10 @@
                 if ( clickedInside(startButton, x, y) ) {
                     time = performance.now();
                     //console.log("clicked start button at " + time);
-                    if ( !startButton.completed ) {
-                        if ( !startButton.started ) {
-                            console.log("starting timer!");
-                            startButton.borderColor = '#80B192';
-                            startButton.started = true;
-                            startButton.startTime = time;
-                        } else {
-                            console.log("ending timer, total duration " + (time / 1000).toFixed(2) + "s");
-                            startButton.borderColor = '#493548';
-                            startButton.completed = true;
-                            startButton.endTime = time;
-                        }
+                    if ( !startButton.timer.completed && !startButton.timer.started ) {
+                        //console.log("starting timer!");
+                        startButton.timer.started = true;
+                        startButton.timer.startTime = time;
                     }
                     
                 };
