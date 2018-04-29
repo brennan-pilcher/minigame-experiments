@@ -37,23 +37,6 @@
             var cRO = -90; // circle rotation offset
             var ctx = canvas.getContext('2d');
 
-            // var startButton = {
-            //     timer : {
-            //         started : false,
-            //         completed : false,
-            //         startTime : {},
-            //         endTime : {}
-            //     },
-            //     x : 225,
-            //     y : 25,
-            //     width : 150,
-            //     height : 35,
-            //     color : '#576490',
-            //     borderColor : '#493548',
-            //     textColor : '#ffffff',
-            //     text : 'START'
-            // };
-
             var gameState = {
                 started : false,
                 completed : false,
@@ -92,7 +75,7 @@
                     radius : 200,
                     lineSize : 50,
                     degrees : 50,
-                    rotation : 0,
+                    rotation : -25,
                     speed : 3
                 },
                 {
@@ -101,7 +84,7 @@
                     radius : 125,
                     lineSize : 50,
                     degrees : 50,
-                    rotation : 0,
+                    rotation : -25,
                     speed : 2
                 },
                 {
@@ -110,7 +93,7 @@
                     radius : 50,
                     lineSize : 50,
                     degrees : 50,
-                    rotation : 0,
+                    rotation : -25,
                     speed : 1
                 }
             ];
@@ -226,13 +209,16 @@
                         statusText.text = "Game Started!";
                         startButton.borderColor = '#80B192';
                         startButton.timer.completed = true;
+                        gameState.started = true;
                     } else {
                         statusText.text = "Starting in... " +  ((startButton.timer.target - (performance.now() - startButton.timer.startTime)) / 1000).toFixed(1) + "s";
                     }
                 }
                 ctx.fillText( statusText.text, statusText.x, statusText.y );
 
-                // Outer Circle
+                // Circles
+
+                ctx.strokeStyle = "#493548";
 
                 for ( var i = 0; i < circles.length; i++ ) {
                     ctx.lineWidth = circles[i].lineSize;
@@ -240,7 +226,9 @@
                     ctx.arc( circles[i].x, circles[i].y, circles[i].radius, degToRad(circles[i].rotation + (0) + cRO), degToRad(circles[i].rotation + circles[i].degrees + cRO));
                     ctx.stroke();
 
-                    circles[i].rotation += circles[i].speed;
+                    if ( gameState.started ) {
+                        circles[i].rotation += circles[i].speed;
+                    }
                 }
 
                 // Goal Line
