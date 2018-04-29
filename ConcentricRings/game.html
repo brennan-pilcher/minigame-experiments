@@ -1,6 +1,7 @@
 <html>
 
     <head>
+        <script src="https://www.gstatic.com/firebasejs/4.13.0/firebase.js"></script>
         <style>
 
             body {
@@ -33,6 +34,7 @@
             var oL = canvas.offsetLeft;
             var oR = canvas.offsetRight;
             var oT = canvas.offsetTop;
+            var cRO = -90; // circle rotation offset
             var ctx = canvas.getContext('2d');
 
             // var startButton = {
@@ -51,6 +53,12 @@
             //     textColor : '#ffffff',
             //     text : 'START'
             // };
+
+            var gameState = {
+                started : false,
+                completed : false,
+                activeRing : 1
+            };
             
             var startButton = {
                 timer : {
@@ -76,8 +84,105 @@
                 text : ''
             };
 
+
+            var circles = [
+                {
+                    x : 300,
+                    y : 350,
+                    radius : 200,
+                    lineSize : 50,
+                    degrees : 50,
+                    rotation : 0,
+                    speed : 3
+                },
+                {
+                    x : 300,
+                    y : 350,
+                    radius : 125,
+                    lineSize : 50,
+                    degrees : 50,
+                    rotation : 0,
+                    speed : 2
+                },
+                {
+                    x : 300,
+                    y : 350,
+                    radius : 50,
+                    lineSize : 50,
+                    degrees : 50,
+                    rotation : 0,
+                    speed : 1
+                }
+            ];
+
+            var goalLine = {
+                x : 300,
+                y : 350,
+                radius : 125,
+                degrees : 2,
+                lineSize : 200,
+                rotation : -1
+            }
+
+            var circlesDB;
+
             function init () {
+                // Initialize Firebase
+                var config = {
+                    apiKey: "AIzaSyBeVbBXvZTyLmhd4dUAd1vJb-v5fl_vc0o",
+                    authDomain: "concentric-rings-minigame.firebaseapp.com",
+                    databaseURL: "https://concentric-rings-minigame.firebaseio.com",
+                    projectId: "concentric-rings-minigame",
+                    storageBucket: "",
+                    messagingSenderId: "92721220049"
+                };
+
+                firebase.initializeApp(config);
+
+                var TLA = Date.now();
+
+                var timeLastAccessed = firebase.database().ref().child('timeLastAccessed');
+
+                var accessDelta = firebase.database().ref().child('accessDelta');
+
+                timeLastAccessed.once('value').then( snapshot => {
+                    console.log(snapshot.val());
+                    console.log(TLA);
+
+                    accessDelta.set( TLA - snapshot.val() );
+                    timeLastAccessed.set(TLA);
+                });
+
+                circlesDB = firebase.database().ref().child('circles');
+
+
+                // circlesDB.on('value', snapshot => {
+                //     // reads
+
+                // });
+
+
                 ctx.textAlign = 'center';
+                
+                canvas.addEventListener('click', function(e) {
+
+                    var x = e.pageX - canvas.offsetLeft;
+                    var y = e.pageY - canvas.offsetTop;
+                    //console.log("mouse: " + x + " " + y);
+
+                    if ( clickedInside(startButton, x, y) ) {
+                        time = performance.now();
+                        //console.log("clicked start button at " + time);
+                        if ( !startButton.timer.completed && !startButton.timer.started ) {
+                            //console.log("starting timer!");
+                            startButton.timer.started = true;
+                            startButton.timer.startTime = time;
+                        }
+                        
+                    };
+
+                });
+
                 window.requestAnimationFrame(draw);
             }
 
@@ -91,7 +196,13 @@
                 }
             }
 
+            // convert degrees to radians for convenience of drawing portions of the circles
+            function degToRad (degree) {
+                return degree * (Math.PI / 180);
+            }
+
             function draw () {
+                //circlesDB.set(circles);
                 ctx.fillStyle = "#F6E8EA";
                 ctx.fillRect(0, 0, 600, 600);
 
@@ -110,40 +221,44 @@
                 ctx.font = "lighter 12px Verdana";
                 ctx.fillStyle = statusText.textColor;
                 if ( !startButton.timer.completed && startButton.timer.started ) {
-                    console.log(3000 - (performance.now() - startButton.timer.startTime));
+                    console.log(startButton.timer.target - (performance.now() - startButton.timer.startTime));
                     if ( performance.now() - startButton.timer.startTime >= startButton.timer.target ) {
                         statusText.text = "Game Started!";
                         startButton.borderColor = '#80B192';
                         startButton.timer.completed = true;
                     } else {
-                        statusText.text = "Starting in... " +  ((3000 - (performance.now() - startButton.timer.startTime)) / 1000).toFixed(1) + "s";
+                        statusText.text = "Starting in... " +  ((startButton.timer.target - (performance.now() - startButton.timer.startTime)) / 1000).toFixed(1) + "s";
                     }
                 }
                 ctx.fillText( statusText.text, statusText.x, statusText.y );
+
+                // Outer Circle
+
+                for ( var i = 0; i < circles.length; i++ ) {
+                    ctx.lineWidth = circles[i].lineSize;
+                    ctx.beginPath();
+                    ctx.arc( circles[i].x, circles[i].y, circles[i].radius, degToRad(circles[i].rotation + (0) + cRO), degToRad(circles[i].rotation + circles[i].degrees + cRO));
+                    ctx.stroke();
+
+                    circles[i].rotation += circles[i].speed;
+                }
+
+                // Goal Line
+                ctx.strokeStyle = "#80B192";
+                ctx.lineWidth = goalLine.lineSize;
+                ctx.beginPath();
+                ctx.arc( goalLine.x, goalLine.y, goalLine.radius, degToRad(goalLine.rotation + (0) + cRO), degToRad(goalLine.rotation + goalLine.degrees + cRO));
+                ctx.stroke();
+                
+
+                
 
 
 
                 window.requestAnimationFrame(draw);
             }
 
-            canvas.addEventListener('click', function(e) {
-
-                var x = e.pageX - canvas.offsetLeft;
-                var y = e.pageY - canvas.offsetTop;
-                //console.log("mouse: " + x + " " + y);
-
-                if ( clickedInside(startButton, x, y) ) {
-                    time = performance.now();
-                    //console.log("clicked start button at " + time);
-                    if ( !startButton.timer.completed && !startButton.timer.started ) {
-                        //console.log("starting timer!");
-                        startButton.timer.started = true;
-                        startButton.timer.startTime = time;
-                    }
-                    
-                };
-                
-            });
+            
 
         </script>
 
