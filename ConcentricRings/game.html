@@ -40,31 +40,18 @@
             var gameState = {
                 started : false,
                 completed : false,
-                activeRing : 1
+                activeRing : 0,
+                circleOneLockTime : null,
+                circleTwoLockTime : null,
+                circleThreeLockTime : null
             };
             
-            var startButton = {
-                timer : {
-                    started : false,
-                    completed : false,
-                    startTime : {},
-                    target : 3000
-                },
-                x : 225,
-                y : 25,
-                width : 150,
-                height : 35,
-                color : '#576490',
-                borderColor : '#493548',
-                textColor : '#ffffff',
-                text : 'START'
-            };
             
             var statusText = {
                 x : 300,
-                y : 100,
+                y : 80,
                 textColor : '#000000',
-                text : ''
+                text : 'Click to start game!'
             };
 
 
@@ -75,7 +62,7 @@
                     radius : 200,
                     lineSize : 50,
                     degrees : 50,
-                    rotation : -25,
+                    rotation : 335,
                     speed : 3
                 },
                 {
@@ -85,7 +72,7 @@
                     lineSize : 50,
                     degrees : 50,
                     rotation : -25,
-                    speed : 2
+                    speed : -3
                 },
                 {
                     x : 300,
@@ -93,12 +80,12 @@
                     radius : 50,
                     lineSize : 50,
                     degrees : 50,
-                    rotation : -25,
-                    speed : 1
+                    rotation : 335,
+                    speed : 3
                 }
             ];
 
-            var goalLine = {
+            var goalZone = {
                 x : 300,
                 y : 350,
                 radius : 125,
@@ -106,6 +93,8 @@
                 lineSize : 200,
                 rotation : -1
             }
+
+            var curr, prev;
 
             var circlesDB;
 
@@ -129,8 +118,8 @@
                 var accessDelta = firebase.database().ref().child('accessDelta');
 
                 timeLastAccessed.once('value').then( snapshot => {
-                    console.log(snapshot.val());
-                    console.log(TLA);
+                    //console.log(snapshot.val());
+                    //console.log(TLA);
 
                     accessDelta.set( TLA - snapshot.val() );
                     timeLastAccessed.set(TLA);
@@ -138,33 +127,49 @@
 
                 circlesDB = firebase.database().ref().child('circles');
 
-
-                // circlesDB.on('value', snapshot => {
-                //     // reads
-
-                // });
-
-
                 ctx.textAlign = 'center';
                 
                 canvas.addEventListener('click', function(e) {
+                    time = performance.now();
 
                     var x = e.pageX - canvas.offsetLeft;
                     var y = e.pageY - canvas.offsetTop;
                     //console.log("mouse: " + x + " " + y);
 
-                    if ( clickedInside(startButton, x, y) ) {
-                        time = performance.now();
-                        //console.log("clicked start button at " + time);
-                        if ( !startButton.timer.completed && !startButton.timer.started ) {
-                            //console.log("starting timer!");
-                            startButton.timer.started = true;
-                            startButton.timer.startTime = time;
-                        }
-                        
-                    };
+                    if ( !gameState.started ) {
+                        gameState.started = true;
+                        statusText.text = 'Started!';
+                        gameState.activeRing += 1;
+                        gameState.circleOneLockTime = performance.now();
+                    }
+                    else if ( gameState.activeRing == 1 ) {
+                        gameState.activeRing += 1;
+                        gameState.circleTwoLockTime = performance.now();
+                        console.log("circle two locked in " + (gameState.circleTwoLockTime - gameState.circleOneLockTime).toFixed()  + "ms");
+                    }
+                    else if ( gameState.activeRing == 2 ) {
+                        gameState.activeRing += 1;
+                        gameState.circleThreeLockTime = performance.now();
+                        gameState.completed = true;
+                        console.log("circle three locked in " + (gameState.circleThreeLockTime - gameState.circleTwoLockTime).toFixed() + "ms");
+                        //statusText.text = "Completed!";
+                        var c1 = (circles[0].rotation % 360);
+                        var c2 = (360 + (circles[1].rotation % 360));
+                        var c3 = (circles[2].rotation % 360);
+                        //console.log("Circle 1 position: " + c1);
+                        //console.log("Circle 2 position: " + c2);
+                        //console.log("Circle 3 position: " + c3);
+
+                        console.log("2 - Accuracy: " + zoneAccuracy( c1, c2 ) );
+                        console.log("3 - Accuracy: " + zoneAccuracy( c1, c3 ) );
+
+                        statusText.text = "Average Accuracy: " + ((zoneAccuracy( c1, c2 ) + zoneAccuracy( c1, c3 ))/2).toString() + "%   Time Spent: " + ((gameState.circleTwoLockTime - gameState.circleOneLockTime) / 1000).toFixed(2) + "s";
+
+                    }
 
                 });
+
+                prev = performance.now();
 
                 window.requestAnimationFrame(draw);
             }
@@ -184,41 +189,44 @@
                 return degree * (Math.PI / 180);
             }
 
+            // find difference between two angles
+            function angleDiff (angleOne, angleTwo) {
+                return 180 - Math.abs( Math.abs(angleOne - angleTwo) - 180 );
+            }
+
+            // get accuracy
+            function zoneAccuracy (targetAngle, sliceAngle) {
+                if ( Math.abs(targetAngle - sliceAngle) < circles[0].degrees ) {
+                    return (1 - Math.abs(targetAngle - sliceAngle) / circles[0].degrees)*100;
+                } else {
+                    return 0;
+                }
+            }
+
             function draw () {
                 //circlesDB.set(circles);
                 ctx.fillStyle = "#F6E8EA";
                 ctx.fillRect(0, 0, 600, 600);
 
-                // Start Button
-                ctx.fillStyle = startButton.color;
-                ctx.strokeStyle = startButton.borderColor;
-                ctx.lineWidth = 8;
-                ctx.strokeRect( startButton.x, startButton.y, startButton.width, startButton.height );
-                ctx.fillRect( startButton.x, startButton.y, startButton.width, startButton.height );
-
-                ctx.font = "lighter 18px Verdana";
-                ctx.fillStyle = startButton.textColor;
-                ctx.fillText( startButton.text, startButton.x + startButton.width/2, startButton.y + startButton.height/2 + 5 );
-
-                // Status Text
-                ctx.font = "lighter 12px Verdana";
-                ctx.fillStyle = statusText.textColor;
-                if ( !startButton.timer.completed && startButton.timer.started ) {
-                    console.log(startButton.timer.target - (performance.now() - startButton.timer.startTime));
-                    if ( performance.now() - startButton.timer.startTime >= startButton.timer.target ) {
-                        statusText.text = "Game Started!";
-                        startButton.borderColor = '#80B192';
-                        startButton.timer.completed = true;
-                        gameState.started = true;
-                    } else {
-                        statusText.text = "Starting in... " +  ((startButton.timer.target - (performance.now() - startButton.timer.startTime)) / 1000).toFixed(1) + "s";
-                    }
+                // Goal Zone
+                if ( gameState.started ) {
+                    ctx.strokeStyle = "#80B192";
+                    ctx.lineWidth = goalZone.lineSize;
+                    ctx.beginPath();
+                    ctx.arc( circles[0].x, circles[0].y, 125, degToRad(circles[0].rotation + (0) + cRO), degToRad(circles[0].rotation + circles[0].degrees + cRO));
+                    ctx.stroke();
                 }
+                
+                // Status Text
+
+                ctx.font = "lighter 16px Verdana";
+                ctx.fillStyle = statusText.textColor;
                 ctx.fillText( statusText.text, statusText.x, statusText.y );
 
                 // Circles
 
                 ctx.strokeStyle = "#493548";
+                //console.log(circles[0].rotation % 360);
 
                 for ( var i = 0; i < circles.length; i++ ) {
                     ctx.lineWidth = circles[i].lineSize;
@@ -226,22 +234,18 @@
                     ctx.arc( circles[i].x, circles[i].y, circles[i].radius, degToRad(circles[i].rotation + (0) + cRO), degToRad(circles[i].rotation + circles[i].degrees + cRO));
                     ctx.stroke();
 
-                    if ( gameState.started ) {
+                    if ( !gameState.completed && gameState.activeRing == i ) {
                         circles[i].rotation += circles[i].speed;
                     }
                 }
 
-                // Goal Line
-                ctx.strokeStyle = "#80B192";
-                ctx.lineWidth = goalLine.lineSize;
-                ctx.beginPath();
-                ctx.arc( goalLine.x, goalLine.y, goalLine.radius, degToRad(goalLine.rotation + (0) + cRO), degToRad(goalLine.rotation + goalLine.degrees + cRO));
-                ctx.stroke();
-                
 
-                
+                curr = performance.now();
 
+                // fps logging
+                //console.log(curr - prev);
 
+                prev = curr;
 
                 window.requestAnimationFrame(draw);
             }
