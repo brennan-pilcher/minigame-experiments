@@ -33,8 +33,87 @@
             var oL = canvas.offsetLeft;
             var oR = canvas.offsetRight;
             var oT = canvas.offsetTop;
+            
+            var width = 600;
+            var height = 600;
+
+            var w_half = width/2;
+            var w_sixth = width/6;
+            var w_twelfth = width/12;
+
+            var h_half = height/2;
+            var h_quarter = height/4;
+
+            var ctx = canvas.getContext('2d');
+
+            var blastDoors = [
+                {
+                    x : 0,
+                    y : 0,
+                    width : w_half,
+                    height : height,
+                    color : "#333",
+                    borderColor : "#666",
+                    direction : 1,
+                    speed : 2
+                },
+                {
+                    x : w_half,
+                    y : 0,
+                    width : w_half,
+                    height : height,
+                    color : "#333",
+                    borderColor : "#666",
+                    direction : -11,
+                    speed : 2
+                }
+            ];
+
+            var levers = [
+                {
+                    x : w_twelfth,
+                    y : h_quarter,
+                    width : w_sixth,
+                    height : h_half,
+                    color : "#333",
+                    borderColor : "#000",
+                    direction : 1,
+                    speed : 2
+                },
+                {
+                    x : 3*w_twelfth,
+                    y : h_quarter,
+                    width : w_sixth,
+                    height : h_half,
+                    color : "#333",
+                    borderColor : "#000",
+                    direction : 1,
+                    speed : 2
+                },
+                {
+                    x : 7*w_twelfth,
+                    y : h_quarter,
+                    width : w_sixth,
+                    height : h_half,
+                    color : "#333",
+                    borderColor : "#000",
+                    direction : 1,
+                    speed : 2
+                },
+                {
+                    x : 9*w_twelfth,
+                    y : h_quarter,
+                    width : w_sixth,
+                    height : h_half,
+                    color : "#333",
+                    borderColor : "#000",
+                    direction : 1,
+                    speed : 2
+                }
+            ]
 
             function init () {
+                ctx.lineWidth = 10;
  
                 window.requestAnimationFrame(draw);
             }
@@ -51,6 +130,28 @@
 
 
             function draw () {
+                // background
+                ctx.fillStyle = "#F6E8EA";
+                ctx.fillRect(0, 0, width, height);
+
+                // blast doors
+                for (var i = 0; i < blastDoors.length; i++) {
+                    ctx.fillStyle = blastDoors[i].color;
+                    ctx.fillRect(blastDoors[i].x, blastDoors[i].y, blastDoors[i].width, blastDoors[i].height);
+
+                    ctx.strokeStyle = blastDoors[i].borderColor;
+                    ctx.strokeRect(blastDoors[i].x, blastDoors[i].y, blastDoors[i].width, blastDoors[i].height);
+                }
+
+                // levers
+                for (var i = 0; i < levers.length; i++) {
+                    ctx.fillStyle = levers[i].color;
+                    ctx.fillRect(levers[i].x, levers[i].y, levers[i].width, levers[i].height);
+
+                    ctx.strokeStyle = levers[i].borderColor;
+                    ctx.strokeRect(levers[i].x, levers[i].y, levers[i].width, levers[i].height);
+                }
+
 
                 window.requestAnimationFrame(draw);
             }
