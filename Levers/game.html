@@ -1,0 +1,66 @@
+<html>
+
+    <head>
+        <style>
+
+            body {
+                background-color: #000;
+            }
+
+            #canvas {
+                background-color: #F6E8EA;
+                border: 1px solid black;
+                margin: 0 auto;
+                display: block;
+                margin: auto;
+            }
+
+        </style>
+
+    </head>
+
+
+
+    <body onload="init()">
+        
+        <canvas id="canvas" width="600" height = "600"></canvas>
+
+
+        <script type="text/javascript">
+
+            
+            var canvas = document.getElementById('canvas');
+            var oL = canvas.offsetLeft;
+            var oR = canvas.offsetRight;
+            var oT = canvas.offsetTop;
+
+            function init () {
+ 
+                window.requestAnimationFrame(draw);
+            }
+
+            // click position detection function for rectangular areas
+            function clickedInside (element, x, y) {
+                if ( x >= element.x && x <= element.x + element.width && y >= element.y && y <= element.y + element.height ) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+
+
+            function draw () {
+
+                window.requestAnimationFrame(draw);
+            }
+
+            
+
+        </script>
+
+    </body>
+
+
+
+</html>
